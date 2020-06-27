@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bmszone/react -test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run bmszone/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t bmszone/bms-multi-client ./client
+  - docker build -t bmszone/bms-multi-nginx ./nginx
+  - docker build -t bmszone/bms-multi-server ./server
+  - docker build -t bmszone/bms-multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push bmszone/bms-multi-client
+  - docker push bmszone/bms-multi-nginx
+  - docker push bmszone/bms-multi-server
+  - docker push bmszone/bms-multi-worker
